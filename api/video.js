@@ -6,15 +6,14 @@ export default async function handler(req, res) {
   try {
     const { script, avatar_id, voice_id } = req.body;
 
-    // Generate video
-    const generateResponse = await fetch('https://api-staging.heygen.com/v1/video.generate', {
+    // Using V2 endpoint
+    const generateResponse = await fetch('https://api-staging.heygen.com/v2/video/generate', {
       method: 'POST',
       headers: {
         'X-Api-Key': process.env.HEYGEN_API_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        version: "v1alpha",
         clips: [
           {
             avatar_id: avatar_id,
@@ -28,7 +27,6 @@ export default async function handler(req, res) {
     const generateData = await generateResponse.json();
     console.log('Generate Response:', generateData);
     
-    // Just return the generation data for now
     res.status(200).json(generateData);
 
   } catch (error) {
