@@ -13,10 +13,14 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        video_inputs: [    // Changed from clips to video_inputs
+        video_inputs: [
           {
-            avatar_id: avatar_id,
-            voice_id: voice_id,
+            avatar: {          // Nested avatar object
+              avatar_id: avatar_id
+            },
+            voice: {           // Nested voice object
+              voice_id: voice_id
+            },
             input_text: script
           }
         ]
