@@ -10,18 +10,20 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'video_id is required' });
       }
   
-      // Using staging API with exact format from docs
-      const url = `https://api-staging.heygen.com/v1/videos/status.get?video_id=${video_id}`;
+      // Using exact format from HeyGen's curl example
+      const url = `https://api-staging.heygen.com/v1/video_status.get?video_id=${video_id}`;
       console.log('Calling URL:', url);
   
       const statusResponse = await fetch(url, {
         method: 'GET',
         headers: {
-          'X-Api-Key': process.env.HEYGEN_API_KEY
+          'accept': 'application/json',
+          'x-api-key': process.env.HEYGEN_API_KEY
         }
       });
   
-      // Log raw response for debugging
+      // Log response details
+      console.log('Response Status:', statusResponse.status);
       const rawText = await statusResponse.text();
       console.log('Raw Response:', rawText);
   
@@ -29,8 +31,6 @@ export default async function handler(req, res) {
         const statusData = JSON.parse(rawText);
         res.status(200).json(statusData);
       } catch (e) {
-        console.log('Response Status Code:', statusResponse.status);
-        console.log('Response Headers:', statusResponse.headers);
         throw new Error(`Could not parse response: ${rawText.substring(0, 100)}`);
       }
   
