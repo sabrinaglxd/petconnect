@@ -10,8 +10,8 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'video_id is required' });
       }
   
-      // Using exact URL from documentation
-      const url = `https://api.heygen.com/v1/videos/status.get?video_id=${video_id}`;  // Complete change to match docs
+      // Using staging API with exact format from docs
+      const url = `https://api-staging.heygen.com/v1/videos/status.get?video_id=${video_id}`;
       console.log('Calling URL:', url);
   
       const statusResponse = await fetch(url, {
@@ -21,10 +21,18 @@ export default async function handler(req, res) {
         }
       });
   
-      const statusData = await statusResponse.json();
-      console.log('Status Response:', statusData);
+      // Log raw response for debugging
+      const rawText = await statusResponse.text();
+      console.log('Raw Response:', rawText);
   
-      res.status(200).json(statusData);
+      try {
+        const statusData = JSON.parse(rawText);
+        res.status(200).json(statusData);
+      } catch (e) {
+        console.log('Response Status Code:', statusResponse.status);
+        console.log('Response Headers:', statusResponse.headers);
+        throw new Error(`Could not parse response: ${rawText.substring(0, 100)}`);
+      }
   
     } catch (error) {
       console.error('Detailed error:', error);
