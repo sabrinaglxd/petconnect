@@ -39,6 +39,4 @@ export default async function handler(req, res) {
       stack: error.stack
     });
   }
-}  });
-  }
 }
