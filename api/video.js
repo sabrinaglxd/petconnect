@@ -6,11 +6,11 @@ export default async function handler(req, res) {
   try {
     const { script, avatar_id, voice_id } = req.body;
 
-    const generateResponse = await fetch('https://api.heygen.com/v2/video/generate', {  // Removed -staging
+    const generateResponse = await fetch('https://api.heygen.com/v2/video/generate', {
       method: 'POST',
       headers: {
-        'X-Api-Key': process.env.HEYGEN_API_KEY,
-        'Content-Type': 'application/json'
+        'x-api-Key': process.env.HEYGEN_API_KEY,    // Changed header format to match
+        'content-type': 'application/json'          // Changed header format to match
       },
       body: JSON.stringify({
         video_inputs: [
@@ -35,10 +35,20 @@ export default async function handler(req, res) {
       })
     });
 
-    const generateData = await generateResponse.json();
-    console.log('Generate Response:', generateData);
-    
-    res.status(200).json(generateData);
+    const data = await generateResponse.json();
+
+    // Match the error handling from your working code
+    if (data.error) {
+      console.error("Error in API response:", JSON.stringify(data.error, null, 2));
+      throw new Error("Video generation failed");
+    } else if (data.data && data.data.video_id) {
+      // Success case
+      console.log("Video ID:", data.data.video_id);
+      res.status(200).json(data);
+    } else {
+      console.error("Unexpected API response:", JSON.stringify(data, null, 2));
+      throw new Error("Unexpected response structure");
+    }
 
   } catch (error) {
     console.error('Detailed error:', error);
