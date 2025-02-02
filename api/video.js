@@ -31,14 +31,21 @@ export default async function handler(req, res) {
       throw new Error(`Video generation failed: ${generateData.message}`);
     }
 
-    // Get video status
-    const statusResponse = await fetch(`https://api-staging.heygen.com/v1/video_status?video_id=${generateData.data.video_id}`, {
+    // Get video status with corrected endpoint
+    const statusResponse = await fetch('https://api-staging.heygen.com/v1/video_status', {
+      method: 'POST',  // Changed to POST
       headers: {
-        'X-Api-Key': process.env.HEYGEN_API_KEY
-      }
+        'X-Api-Key': process.env.HEYGEN_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({  // Added request body
+        video_id: generateData.data.video_id
+      })
     });
 
     const statusData = await statusResponse.json();
+    console.log('Status Response:', statusData);  // Added logging
+
     res.status(200).json({
       generation: generateData,
       status: statusData
