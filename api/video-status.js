@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
+    if (req.method !== 'POST') {  // Keep this as POST
       return res.status(405).json({ error: 'Method not allowed - use POST' });
     }
   
@@ -10,9 +10,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'video_id is required' });
       }
   
-      // Updated to use the correct endpoint structure
+      // We make a GET request to HeyGen
       const statusResponse = await fetch(`https://api.heygen.com/v2/video/status/${video_id}`, {
-        method: 'GET',  // Changed to GET request
+        method: 'GET',
         headers: {
           'x-api-Key': process.env.HEYGEN_API_KEY
         }
