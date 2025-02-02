@@ -15,7 +15,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          version: "v1",    // Added version field
+          version: "v1alpha",    // Changed from "v1" to "v1alpha"
           video_inputs: [{
             avatar_id: avatar_id,
             voice_id: voice_id,
