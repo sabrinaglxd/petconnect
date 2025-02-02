@@ -10,8 +10,8 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'video_id is required' });
       }
   
-      // Log the URL we're calling
-      const url = `https://api.heygen.com/v2/video/status/${video_id}`;
+      // Using the correct endpoint from the documentation
+      const url = `https://api.heygen.com/v2/videos/${video_id}`;  // Notice the plural 'videos'
       console.log('Calling URL:', url);
   
       const statusResponse = await fetch(url, {
@@ -21,18 +21,10 @@ export default async function handler(req, res) {
         }
       });
   
-      // Log the status code and raw response
-      console.log('Response status:', statusResponse.status);
-      const rawText = await statusResponse.text();
-      console.log('Raw response:', rawText);
+      const statusData = await statusResponse.json();
+      console.log('Status Response:', statusData);
   
-      // Try to parse if it looks like JSON
-      if (rawText.trim().startsWith('{')) {
-        const statusData = JSON.parse(rawText);
-        res.status(200).json(statusData);
-      } else {
-        throw new Error(`Unexpected response format: ${rawText.substring(0, 100)}...`);
-      }
+      res.status(200).json(statusData);
   
     } catch (error) {
       console.error('Detailed error:', error);
