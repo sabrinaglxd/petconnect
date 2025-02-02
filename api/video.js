@@ -15,13 +15,14 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         video_inputs: [
           {
-            avatar: {          // Nested avatar object
+            avatar: {
               avatar_id: avatar_id
             },
-            voice: {           // Nested voice object
-              voice_id: voice_id
-            },
-            input_text: script
+            voice: {
+              type: "text",     // Added voice type
+              voice_id: voice_id,
+              input_text: script
+            }
           }
         ]
       })
