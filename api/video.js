@@ -26,30 +26,10 @@ export default async function handler(req, res) {
     });
 
     const generateData = await generateResponse.json();
+    console.log('Generate Response:', generateData);
     
-    if (generateData.code !== 100) {
-      throw new Error(`Video generation failed: ${generateData.message}`);
-    }
-
-    // Get video status with corrected endpoint
-    const statusResponse = await fetch('https://api-staging.heygen.com/v1/video_status', {
-      method: 'POST',  // Changed to POST
-      headers: {
-        'X-Api-Key': process.env.HEYGEN_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({  // Added request body
-        video_id: generateData.data.video_id
-      })
-    });
-
-    const statusData = await statusResponse.json();
-    console.log('Status Response:', statusData);  // Added logging
-
-    res.status(200).json({
-      generation: generateData,
-      status: statusData
-    });
+    // Just return the generation data for now
+    res.status(200).json(generateData);
 
   } catch (error) {
     console.error('Detailed error:', error);
@@ -58,5 +38,7 @@ export default async function handler(req, res) {
       details: error.message,
       stack: error.stack
     });
+  }
+}  });
   }
 }
