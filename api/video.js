@@ -4,32 +4,49 @@ export default async function handler(req, res) {
     }
   
     try {
-      const { background, video_inputs } = req.body;
+      const { script, avatar_id, voice_id } = req.body;
   
-      // Using the correct HeyGen API base URL
-      const response = await fetch('https://api-production.heygen.com/v2/video/generation', {
+      // First request - Generate the video
+      const generateResponse = await fetch('https://api.heygen.com/v1/video.generate', {
         method: 'POST',
         headers: {
-          'X-Api-Key': process.env.HEYGEN_API_KEY,
+          'Authorization': `Bearer ${process.env.HEYGEN_API_KEY}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          background,
-          video_inputs
+          avatar_id: avatar_id,
+          voice_id: voice_id,
+          script: script,
+          version: "v1"  // Adding explicit version
         })
       });
   
-      // Log the response status and data for debugging
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
+      console.log('Generate Response Status:', generateResponse.status);
+      const generateData = await generateResponse.json();
+      console.log('Generate Response Data:', generateData);
   
-      res.status(200).json(data);
+      // Check if we got a video_id
+      if (!generateData.video_id) {
+        throw new Error('No video_id received from HeyGen');
+      }
+  
+      // Second request - Get the video status/URL
+      const statusResponse = await fetch(`https://api.heygen.com/v1/video_status?video_id=${generateData.video_id}`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.HEYGEN_API_KEY}`
+        }
+      });
+  
+      const statusData = await statusResponse.json();
+      console.log('Status Response Data:', statusData);
+  
+      res.status(200).json(statusData);
     } catch (error) {
       console.error('Detailed error:', error);
       res.status(500).json({ 
         error: 'Failed to process request',
-        details: error.message 
+        details: error.message,
+        stack: error.stack
       });
     }
   }
