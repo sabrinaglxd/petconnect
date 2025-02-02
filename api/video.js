@@ -6,8 +6,7 @@ export default async function handler(req, res) {
   try {
     const { script, avatar_id, voice_id } = req.body;
 
-    console.log('Using API Key:', process.env.HEYGEN_API_KEY?.substring(0, 5) + '...');
-
+    // Generate video
     const generateResponse = await fetch('https://api-staging.heygen.com/v1/video.generate', {
       method: 'POST',
       headers: {
@@ -16,23 +15,35 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         version: "v1alpha",
-        clips: [    // Updated clips array with input_text
+        clips: [
           {
             avatar_id: avatar_id,
             voice_id: voice_id,
-            input_text: script  // Changed from text to input_text
+            input_text: script
           }
         ]
       })
     });
 
-    const rawResponse = await generateResponse.text();
-    console.log('Raw response:', rawResponse);
+    const generateData = await generateResponse.json();
     
-    const generateData = JSON.parse(rawResponse);
-    console.log('Generate Response Data:', generateData);
+    if (generateData.code !== 100) {
+      throw new Error(`Video generation failed: ${generateData.message}`);
+    }
 
-    res.status(200).json(generateData);
+    // Get video status
+    const statusResponse = await fetch(`https://api-staging.heygen.com/v1/video_status?video_id=${generateData.data.video_id}`, {
+      headers: {
+        'X-Api-Key': process.env.HEYGEN_API_KEY
+      }
+    });
+
+    const statusData = await statusResponse.json();
+    res.status(200).json({
+      generation: generateData,
+      status: statusData
+    });
+
   } catch (error) {
     console.error('Detailed error:', error);
     res.status(500).json({ 
