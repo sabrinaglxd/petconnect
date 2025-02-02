@@ -10,13 +10,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'video_id is required' });
       }
   
-      const statusResponse = await fetch('https://api.heygen.com/v2/video/status', {
-        method: 'POST',
+      // Updated to use the correct endpoint structure
+      const statusResponse = await fetch(`https://api.heygen.com/v2/video/status/${video_id}`, {
+        method: 'GET',  // Changed to GET request
         headers: {
-          'x-api-Key': process.env.HEYGEN_API_KEY,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify({ video_id })
+          'x-api-Key': process.env.HEYGEN_API_KEY
+        }
       });
   
       const statusData = await statusResponse.json();
