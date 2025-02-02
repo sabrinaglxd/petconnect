@@ -6,7 +6,8 @@ export default async function handler(req, res) {
     try {
       const { script, avatar_id, voice_id } = req.body;
   
-      // Using test environment URL
+      console.log('Sending request with:', { script, avatar_id, voice_id });
+  
       const generateResponse = await fetch('https://api-staging.heygen.com/v1/video.generate', {
         method: 'POST',
         headers: {
@@ -14,33 +15,23 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          avatar_id: avatar_id,
-          voice_id: voice_id,
-          script: script,
-          version: "v1"
+          video_inputs: [{
+            avatar_id: avatar_id,
+            voice_id: voice_id,
+            text: script
+          }]
         })
       });
   
-      console.log('Generate Response Status:', generateResponse.status);
-      const generateData = await generateResponse.json();
+      // Log the raw response
+      const rawResponse = await generateResponse.text();
+      console.log('Raw response:', rawResponse);
+  
+      // Try to parse the response
+      const generateData = JSON.parse(rawResponse);
       console.log('Generate Response Data:', generateData);
   
-      // Check if we got a video_id
-      if (!generateData.video_id) {
-        throw new Error('No video_id received from HeyGen');
-      }
-  
-      // Also use test environment for status check
-      const statusResponse = await fetch(`https://api-staging.heygen.com/v1/video_status?video_id=${generateData.video_id}`, {
-        headers: {
-          'Authorization': `Bearer ${process.env.HEYGEN_API_KEY}`
-        }
-      });
-  
-      const statusData = await statusResponse.json();
-      console.log('Status Response Data:', statusData);
-  
-      res.status(200).json(statusData);
+      res.status(200).json(generateData);
     } catch (error) {
       console.error('Detailed error:', error);
       res.status(500).json({ 
