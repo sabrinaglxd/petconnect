@@ -4,34 +4,26 @@ export default async function handler(req, res) {
     }
   
     try {
-      const { script, avatar_id, voice_id } = req.body;
+      const { background, video_inputs } = req.body;
   
-      // Updated HeyGen API endpoint
-      const response = await fetch('https://api.heygen.com/v2/video/generation', {
+      // Using the correct HeyGen API base URL
+      const response = await fetch('https://api-production.heygen.com/v2/video/generation', {
         method: 'POST',
         headers: {
           'X-Api-Key': process.env.HEYGEN_API_KEY,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          background: "#ffffff",
-          video_inputs: [
-            {
-              script: {
-                text: script,
-                input_text: script
-              },
-              avatar: {
-                avatar_id: avatar_id,
-                voice_id: voice_id
-              }
-            }
-          ]
+          background,
+          video_inputs
         })
       });
   
+      // Log the response status and data for debugging
+      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('HeyGen response:', data);
+      console.log('Response data:', data);
+  
       res.status(200).json(data);
     } catch (error) {
       console.error('Detailed error:', error);
