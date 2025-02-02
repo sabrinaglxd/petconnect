@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   try {
     const { script, avatar_id, voice_id } = req.body;
 
-    const generateResponse = await fetch('https://api-staging.heygen.com/v2/video/generate', {
+    const generateResponse = await fetch('https://api.heygen.com/v2/video/generate', {  // Removed -staging
       method: 'POST',
       headers: {
         'X-Api-Key': process.env.HEYGEN_API_KEY,
@@ -15,20 +15,20 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         video_inputs: [
           {
-            character: {           // Changed from 'avatar' to 'character'
-              type: "avatar",      // Added type
+            character: {
+              type: "avatar",
               avatar_id: avatar_id,
-              avatar_style: "normal"  // Added style
+              avatar_style: "normal"
             },
             voice: {
               type: "text",
               input_text: script,
               voice_id: voice_id,
-              speed: 1.1           // Added speed
+              speed: 1.1
             }
           }
         ],
-        dimension: {              // Added dimension
+        dimension: {
           width: 1280,
           height: 720
         }
