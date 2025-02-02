@@ -15,16 +15,23 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         video_inputs: [
           {
-            avatar: {
-              avatar_id: avatar_id
+            character: {           // Changed from 'avatar' to 'character'
+              type: "avatar",      // Added type
+              avatar_id: avatar_id,
+              avatar_style: "normal"  // Added style
             },
             voice: {
-              type: "text",     // Added voice type
+              type: "text",
+              input_text: script,
               voice_id: voice_id,
-              input_text: script
+              speed: 1.1           // Added speed
             }
           }
-        ]
+        ],
+        dimension: {              // Added dimension
+          width: 1280,
+          height: 720
+        }
       })
     });
 
