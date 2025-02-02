@@ -6,7 +6,6 @@ export default async function handler(req, res) {
   try {
     const { script, avatar_id, voice_id } = req.body;
 
-    // Using V2 endpoint
     const generateResponse = await fetch('https://api-staging.heygen.com/v2/video/generate', {
       method: 'POST',
       headers: {
@@ -14,7 +13,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        clips: [
+        video_inputs: [    // Changed from clips to video_inputs
           {
             avatar_id: avatar_id,
             voice_id: voice_id,
