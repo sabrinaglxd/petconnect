@@ -6,12 +6,12 @@ export default async function handler(req, res) {
     try {
       const { script, avatar_id, voice_id } = req.body;
   
-      console.log('Sending request with:', { script, avatar_id, voice_id });
+      console.log('Using API Key:', process.env.HEYGEN_API_KEY?.substring(0, 5) + '...');  // Only log first 5 chars for security
   
       const generateResponse = await fetch('https://api-staging.heygen.com/v1/video.generate', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.HEYGEN_API_KEY}`,
+          'X-Api-Key': process.env.HEYGEN_API_KEY,  // Changed from 'Authorization'
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -23,11 +23,9 @@ export default async function handler(req, res) {
         })
       });
   
-      // Log the raw response
       const rawResponse = await generateResponse.text();
       console.log('Raw response:', rawResponse);
-  
-      // Try to parse the response
+      
       const generateData = JSON.parse(rawResponse);
       console.log('Generate Response Data:', generateData);
   
