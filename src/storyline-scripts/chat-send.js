@@ -1,8 +1,11 @@
+// Make function available globally
+window.handleSend = handleSend;
+
 async function handleSend() {
     var player = GetPlayer();
     
-    // Disable send button
-    player.SetVar("Send Button", "disabled");  // Adjust this to match your button name in Storyline
+    // Disable send button using exact state name
+    player.SetVar("Send Button.state", "Disabled");
     
     try {
         // Get and save user's message
@@ -46,7 +49,7 @@ async function handleSend() {
         console.error('Error:', error);
         player.SetVar("lindaResponse", "I'm sorry, I'm having trouble connecting. Could you try again?");
     } finally {
-        // Re-enable send button
-        player.SetVar("Send Button", "normal");  // Adjust this to match your button name
+        // Re-enable send button using exact state name
+        player.SetVar("Send Button.state", "Normal");
     }
 }
