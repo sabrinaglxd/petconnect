@@ -2,7 +2,9 @@
 window.handleSend = handleSend;
 
 async function handleSend() {
+    console.log("handleSend function called");
     var player = GetPlayer();
+    console.log("Player object:", player);
     
     // Disable send button using exact state name
     player.SetVar("Send Button.state", "Disabled");
