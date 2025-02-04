@@ -1,45 +1,40 @@
-export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed - use POST' });
-    }
-  
-    try {
-      const { video_id } = req.body;
-  
-      if (!video_id) {
-        return res.status(400).json({ error: 'video_id is required' });
-      }
-  
-      // Using exact format from HeyGen's curl example
-      const url = `https://api-staging.heygen.com/v1/video_status.get?video_id=${video_id}`;
-      console.log('Calling URL:', url);
-  
-      const statusResponse = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'accept': 'application/json',
-          'x-api-key': process.env.HEYGEN_API_KEY
-        }
+async function checkVideoStatus(videoId) {
+  var player = GetPlayer();
+  const startTime = Date.now();
+  const timeout = 4 * 60 * 1000; // 4 minutes timeout
+
+  try {
+      const statusResponse = await fetch('https://petconnect-five-xi.vercel.app/api/video-status', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ video_id: videoId })
       });
-  
-      // Log response details
-      console.log('Response Status:', statusResponse.status);
-      const rawText = await statusResponse.text();
-      console.log('Raw Response:', rawText);
-  
-      try {
-        const statusData = JSON.parse(rawText);
-        res.status(200).json(statusData);
-      } catch (e) {
-        throw new Error(`Could not parse response: ${rawText.substring(0, 100)}`);
+
+      const statusData = await statusResponse.json();
+
+      if (statusData.data.status === "completed") {
+          // Video is ready
+          player.SetVar("videoURL", statusData.data.video_url);
+          
+          // Update web object with video URL
+          const video = GetPlayer().GetWebObject("Morgan Video");
+          if (video) {
+              video.Change(statusData.data.video_url);
+          }
+          
+          player.SetVar("videoReady", true);
+      } else if (Date.now() - startTime > timeout) {
+          // Timeout reached, use fallback
+          console.log("Video generation timed out");
+          player.SetVar("videoFallback", starRating >= 4 ? 1 : starRating === 3 ? 2 : 3);
+      } else {
+          // Check again in 10 seconds
+          setTimeout(() => checkVideoStatus(videoId), 10000);
       }
-  
-    } catch (error) {
-      console.error('Detailed error:', error);
-      res.status(500).json({ 
-        error: 'Failed to check video status',
-        details: error.message,
-        stack: error.stack
-      });
-    }
+
+  } catch (error) {
+      console.error('Error checking status:', error);
   }
+}
