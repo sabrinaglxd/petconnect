@@ -51,10 +51,16 @@ export default async function handler(req, res) {
       });
 
       const data = await generateResponse.json();
-      res.status(200).json(data);
       
+      // Log the response for debugging
+      console.log('HeyGen Response:', data);
+      
+      res.status(200).json(data);
   } catch (error) {
-      console.error('Error:', error);
-      res.status(500).json({ error: 'Failed to process request' });
+      console.error('Detailed error:', error);
+      res.status(500).json({ 
+          error: 'Failed to process request',
+          details: error.message
+      });
   }
 }
