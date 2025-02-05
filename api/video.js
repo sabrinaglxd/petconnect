@@ -1,9 +1,9 @@
 export default async function handler(req, res) {
-    // Update CORS headers to allow Articulate's domain
+    // CORS headers remain the same
     const allowedOrigins = [
         'https://articulateusercontent.com',
         'https://review360.articulate.com',
-        '*'  // During development/testing
+        '*'
     ];
     
     const origin = req.headers.origin;
@@ -18,72 +18,80 @@ export default async function handler(req, res) {
         'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     );
 
-    // Handle preflight request
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
     }
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-
     try {
+        // Log the incoming request
+        console.log('Received request body:', req.body);
+        
         const { script } = req.body;
-        console.log('Attempting video generation with script:', script);
+        
+        // Verify script content
+        if (!script) {
+            throw new Error('No script provided in request');
+        }
+        
+        console.log('Preparing HeyGen request with script:', script);
 
-        // Log what we're sending to HeyGen
-        const requestBody = {
-            video_inputs: [
-                {
-                    character: {
-                        type: "avatar",
-                        avatar_id: "Georgia_expressive_2024112701",
-                        avatar_style: "normal"
-                    },
-                    voice: {
-                        type: "text",
-                        input_text: script,
-                        voice_id: "511ffd086a904ef593b608032004112c",
-                        speed: 1.1
-                    }
-                }
-            ],
-            dimension: {
-                width: 1280,
-                height: 720
-            }
-        };
-        console.log('HeyGen request body:', JSON.stringify(requestBody, null, 2));
-
-        const generateResponse = await fetch('https://api-staging.heygen.com/v2/video/generate', {
-            method: 'POST',
-            headers: {
-                'X-Api-Key': process.env.HEYGEN_API_KEY,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        // Log the full response
-        const responseText = await generateResponse.text();
-        console.log('HeyGen raw response:', responseText);
-
-        // Try to parse the response
-        let data;
         try {
-            data = JSON.parse(responseText);
-        } catch (parseError) {
-            throw new Error(`Failed to parse HeyGen response: ${responseText}`);
+            const generateResponse = await fetch('https://api-staging.heygen.com/v2/video/generate', {
+                method: 'POST',
+                headers: {
+                    'X-Api-Key': process.env.HEYGEN_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    version: "v1alpha",
+                    video_inputs: [
+                        {
+                            character: {
+                                type: "avatar",
+                                avatar_id: "Georgia_expressive_2024112701",
+                                avatar_style: "normal"
+                            },
+                            voice: {
+                                type: "text",
+                                input_text: script,
+                                voice_id: "511ffd086a904ef593b608032004112c",
+                                speed: 1.1
+                            }
+                        }
+                    ],
+                    dimension: {
+                        width: 1280,
+                        height: 720
+                    }
+                })
+            });
+
+            // Log raw response for debugging
+            const responseText = await generateResponse.text();
+            console.log('HeyGen Response Text:', responseText);
+            
+            try {
+                const data = JSON.parse(responseText);
+                console.log('Parsed Response:', data);
+                res.status(200).json(data);
+            } catch (parseError) {
+                console.error('Failed to parse HeyGen response:', parseError);
+                throw new Error(`Invalid response from HeyGen: ${responseText}`);
+            }
+
+        } catch (fetchError) {
+            console.error('Fetch error:', fetchError);
+            throw new Error(`HeyGen API request failed: ${fetchError.message}`);
         }
 
-        res.status(200).json(data);
     } catch (error) {
-        console.error('Detailed generation error:', {
+        console.error('Full error details:', {
             message: error.message,
             stack: error.stack,
-            cause: error.cause
+            name: error.name
         });
+        
         res.status(500).json({ 
             error: 'Failed to process request',
             details: error.message,
