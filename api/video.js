@@ -1,6 +1,33 @@
 export default async function handler(req, res) {
-    // CORS headers remain the same
+    // Update CORS headers to allow Articulate's domain
+    const allowedOrigins = [
+        'https://articulateusercontent.com',
+        'https://review360.articulate.com',
+        '*'  // During development/testing
+    ];
     
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
+
+    // Handle preflight request
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     try {
         const { script } = req.body;
         console.log('Attempting video generation with script:', script);
