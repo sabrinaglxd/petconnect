@@ -37,33 +37,34 @@ export default async function handler(req, res) {
         console.log('Preparing HeyGen request with script:', script);
 
         try {
-            const generateResponse = await fetch('https://api-staging.heygen.com/v2/video/generate', {
-                method: 'POST',
+            // Inside the generateFeedbackVideo function, update the video generation request:
+            const videoResponse = await fetch('https://api-staging.heygen.com/v2/video/generate', {
+                 method: 'POST',
                 headers: {
                     'X-Api-Key': process.env.HEYGEN_API_KEY,
                     'Content-Type': 'application/json'
-                },
+                 },
                 body: JSON.stringify({
                     version: "v2",
                     video_inputs: [
                         {
                             character: {
-                                type: "avatar",
+                                 type: "avatar",
                                 avatar_id: "Georgia_expressive_2024112701",
                                 avatar_style: "normal"
-                            },
-                            voice: {
-                                type: "text",
-                                input_text: script,
-                                voice_id: "511ffd086a904ef593b608032004112c",
+                             },
+                             voice: {
+                                 type: "text",
+                                 input_text: script,
+                                 voice_id: "511ffd086a904ef593b608032004112c",
                                 speed: 1.1
-                            }
+                             }
                         }
                     ],
-                    dimension: {
-                        width: 1280,
-                        height: 720
-                    }
+                     dimension: {
+                         width: 1280,
+                         height: 720
+                     }
                 })
             });
 
