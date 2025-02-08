@@ -44,7 +44,7 @@ export default async function handler(req, res) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    version: "v1alpha",
+                    version: "v2",
                     video_inputs: [
                         {
                             character: {
