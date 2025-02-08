@@ -37,49 +37,50 @@ export default async function handler(req, res) {
         console.log('Preparing HeyGen request with script:', script);
 
         try {
-            // Inside the generateFeedbackVideo function, update the video generation request:
             const videoResponse = await fetch('https://api-staging.heygen.com/v2/video/generate', {
-                 method: 'POST',
+                method: 'POST',
                 headers: {
                     'X-Api-Key': process.env.HEYGEN_API_KEY,
                     'Content-Type': 'application/json'
-                 },
+                },
                 body: JSON.stringify({
                     version: "v2",
                     video_inputs: [
                         {
                             character: {
-                                 type: "avatar",
+                                type: "avatar",
                                 avatar_id: "Georgia_expressive_2024112701",
                                 avatar_style: "normal"
-                             },
-                             voice: {
-                                 type: "text",
-                                 input_text: script,
-                                 voice_id: "511ffd086a904ef593b608032004112c",
+                            },
+                            voice: {
+                                type: "text",
+                                input_text: script,
+                                voice_id: "511ffd086a904ef593b608032004112c",
                                 speed: 1.1
-                             }
+                            }
                         }
                     ],
-                     dimension: {
-                         width: 1280,
-                         height: 720
-                     }
+                    dimension: {
+                        width: 1280,
+                        height: 720
+                    }
                 })
             });
-
-            // Log raw response for debugging
-            const responseText = await generateResponse.text();
-            console.log('HeyGen Response Text:', responseText);
-            
+        
+            // Add these lines to see the raw response
+            const rawResponse = await videoResponse.text();
+            console.log('HeyGen Response Status:', videoResponse.status);
+            console.log('HeyGen Raw Response:', rawResponse);
+        
             try {
-                const data = JSON.parse(responseText);
+                const data = JSON.parse(rawResponse);
                 console.log('Parsed Response:', data);
                 res.status(200).json(data);
             } catch (parseError) {
-                console.error('Failed to parse HeyGen response:', parseError);
-                throw new Error(`Invalid response from HeyGen: ${responseText}`);
+                console.error('Failed to parse response:', rawResponse);
+                throw new Error(`Invalid response from HeyGen: ${rawResponse}`);
             }
+        
 
         } catch (fetchError) {
             console.error('Fetch error:', fetchError);
