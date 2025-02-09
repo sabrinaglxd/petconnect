@@ -1,5 +1,12 @@
 export default async function handler(req, res) {
-    // CORS headers remain the same
+    // Debug logging at start
+    console.log('=== Video Status Check Request Started ===');
+    console.log('Request Method:', req.method);
+    console.log('Request Query Parameters:', req.query);
+    console.log('Request Body:', req.body);
+    console.log('Request Headers:', req.headers);
+
+    // CORS headers
     const allowedOrigins = [
         'https://360.articulate.com',
         'https://review360.articulate.com',
@@ -24,19 +31,18 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Get video_id from query parameters
-        const video_id = req.query.video_id;
+        // Get video_id from query parameters or body
+        const video_id = req.method === 'GET' ? req.query.video_id : req.body?.video_id;
+        console.log('Extracted video_id:', video_id);
 
         if (!video_id) {
+            console.log('No video_id provided');
             return res.status(400).json({ error: 'video_id is required as a query parameter' });
         }
 
-        // Log the request details
-        console.log('Checking status for video_id:', video_id);
-
         // Updated endpoint URL to match HeyGen's documentation
         const apiUrl = `https://api.heygen.com/v2/videos/${encodeURIComponent(video_id)}`;
-        console.log('Making request to:', apiUrl);
+        console.log('Making request to HeyGen:', apiUrl);
 
         const statusResponse = await fetch(apiUrl, {
             method: 'GET',
@@ -52,9 +58,10 @@ export default async function handler(req, res) {
 
         try {
             const statusData = JSON.parse(responseText);
+            console.log('Parsed response data:', statusData);
             return res.status(200).json(statusData);
         } catch (parseError) {
-            console.error('Failed to parse HeyGen response:', responseText);
+            console.error('Failed to parse HeyGen response:', parseError);
             return res.status(500).json({ 
                 error: 'Invalid response from HeyGen',
                 details: responseText
@@ -62,7 +69,7 @@ export default async function handler(req, res) {
         }
 
     } catch (error) {
-        console.error('Error checking video status:', error);
+        console.error('Error in video status check:', error);
         return res.status(500).json({ 
             error: 'Failed to check video status',
             details: error.message
