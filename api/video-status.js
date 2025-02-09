@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    // Update CORS headers to handle Articulate domains
+    // CORS headers stay the same
     const allowedOrigins = [
         'https://360.articulate.com',
         'https://review360.articulate.com',
@@ -18,14 +18,9 @@ export default async function handler(req, res) {
         'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     );
 
-    // Handle preflight request
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
@@ -35,15 +30,20 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'video_id is required' });
         }
 
-        // Using production endpoint
-        const statusResponse = await fetch(`https://api.heygen.com/v2/video/status/${video_id}`, {
-            method: 'GET',
+        // Updated to match HeyGen's V2 API format
+        const statusResponse = await fetch('https://api.heygen.com/v2/videos/status', {
+            method: 'POST',
             headers: {
-                'X-Api-Key': process.env.HEYGEN_API_KEY
-            }
+                'X-Api-Key': process.env.HEYGEN_API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                video_id: video_id
+            })
         });
 
         const statusData = await statusResponse.json();
+        console.log('Status Response:', statusData);
         res.status(200).json(statusData);
 
     } catch (error) {
