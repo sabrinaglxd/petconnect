@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    // CORS headers remain the same
+    // CORS headers stay the same
     const allowedOrigins = [
         'https://360.articulate.com',
         'https://review360.articulate.com',
@@ -24,90 +24,33 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Log the incoming request body for debugging
-        console.log('Incoming request body:', req.body);
+        const { video_id } = req.body;
 
-        // Extract data from request body
-        const { script, avatar_id, voice_id } = req.body;
-
-        // Validate required fields
-        if (!script || !avatar_id || !voice_id) {
-            console.log('Missing required fields:', { script, avatar_id, voice_id });
-            return res.status(400).json({ 
-                error: 'Missing required fields', 
-                details: 'script, avatar_id, and voice_id are required' 
-            });
+        if (!video_id) {
+            return res.status(400).json({ error: 'video_id is required' });
         }
 
-        // Log the request we're about to make to HeyGen
-        const requestBody = {
-            "background": "#ffffff",
-            "ratio": "16:9",
-            "test": false,
-            "version": "v2",
-            "clips": [
-                {
-                    "avatar_id": avatar_id,
-                    "avatar_style": "normal",
-                    "input_text": script,
-                    "voice_id": voice_id,
-                    "scale": 1.1,
-                    "position_x": 0,
-                    "position_y": 0
-                }
-            ]
-        };
-        console.log('HeyGen request body:', requestBody);
-
-        // Make request to HeyGen API
-        const response = await fetch('https://api.heygen.com/v2/video.generate', {
+        // Updated to match HeyGen's V2 API format
+        const statusResponse = await fetch('https://api.heygen.com/v2/videos/status', {
             method: 'POST',
             headers: {
-                'accept': 'application/json',
-                'content-type': 'application/json',
-                'x-api-key': process.env.HEYGEN_API_KEY
+                'X-Api-Key': process.env.HEYGEN_API_KEY,
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify({
+                video_id: video_id
+            })
         });
 
-        // Log response details for debugging
-        console.log('HeyGen response status:', response.status);
-        console.log('HeyGen response headers:', Object.fromEntries(response.headers.entries()));
-
-        // Read the response as text first
-        const responseText = await response.text();
-        console.log('HeyGen raw response:', responseText);
-
-        // Try to parse as JSON if possible
-        let responseData;
-        try {
-            responseData = JSON.parse(responseText);
-        } catch (e) {
-            console.error('Failed to parse HeyGen response as JSON:', e);
-            return res.status(500).json({ 
-                error: 'Invalid JSON response from HeyGen',
-                details: responseText
-            });
-        }
-
-        // Check if response was successful
-        if (!response.ok) {
-            console.error('HeyGen API Error:', responseData);
-            return res.status(response.status).json({
-                error: 'HeyGen API error',
-                details: responseData
-            });
-        }
-
-        // Send successful response
-        res.status(200).json(responseData);
+        const statusData = await statusResponse.json();
+        console.log('Status Response:', statusData);
+        res.status(200).json(statusData);
 
     } catch (error) {
-        console.error('Error in video generation endpoint:', error);
+        console.error('Error checking video status:', error);
         res.status(500).json({ 
-            error: 'Failed to generate video',
-            details: error.message,
-            stack: error.stack
+            error: 'Failed to check video status',
+            details: error.message
         });
     }
 }
