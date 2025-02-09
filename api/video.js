@@ -37,7 +37,7 @@ export default async function handler(req, res) {
         console.log('Preparing HeyGen request with script:', script);
 
         try {
-            const videoResponse = await fetch('https://api-staging.heygen.com/v2/video/generate', {
+            const videoResponse = await fetch('https://api.heygen.com/v2/video/generate', {
                 method: 'POST',
                 headers: {
                     'X-Api-Key': process.env.HEYGEN_API_KEY,
