@@ -1,40 +1,56 @@
-async function checkVideoStatus(videoId) {
-  var player = GetPlayer();
-  const startTime = Date.now();
-  const timeout = 4 * 60 * 1000; // 4 minutes timeout
+export default async function handler(req, res) {
+    // Update CORS headers to handle Articulate domains
+    const allowedOrigins = [
+        'https://360.articulate.com',
+        'https://review360.articulate.com',
+        'https://articulateusercontent.com'
+    ];
+    
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin) || origin?.endsWith('.articulate.com')) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
 
-  try {
-      const statusResponse = await fetch('https://petconnect-five-xi.vercel.app/api/video-status', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ video_id: videoId })
-      });
+    // Handle preflight request
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
 
-      const statusData = await statusResponse.json();
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-      if (statusData.data.status === "completed") {
-          // Video is ready
-          player.SetVar("videoURL", statusData.data.video_url);
-          
-          // Update web object with video URL
-          const video = GetPlayer().GetWebObject("Morgan Video");
-          if (video) {
-              video.Change(statusData.data.video_url);
-          }
-          
-          player.SetVar("videoReady", true);
-      } else if (Date.now() - startTime > timeout) {
-          // Timeout reached, use fallback
-          console.log("Video generation timed out");
-          player.SetVar("videoFallback", starRating >= 4 ? 1 : starRating === 3 ? 2 : 3);
-      } else {
-          // Check again in 10 seconds
-          setTimeout(() => checkVideoStatus(videoId), 10000);
-      }
+    try {
+        const { video_id } = req.body;
 
-  } catch (error) {
-      console.error('Error checking status:', error);
-  }
+        if (!video_id) {
+            return res.status(400).json({ error: 'video_id is required' });
+        }
+
+        // Using production endpoint
+        const statusResponse = await fetch(`https://api.heygen.com/v2/video/status/${video_id}`, {
+            method: 'GET',
+            headers: {
+                'X-Api-Key': process.env.HEYGEN_API_KEY
+            }
+        });
+
+        const statusData = await statusResponse.json();
+        res.status(200).json(statusData);
+
+    } catch (error) {
+        console.error('Error checking video status:', error);
+        res.status(500).json({ 
+            error: 'Failed to check video status',
+            details: error.message
+        });
+    }
 }
