@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    // CORS headers stay the same
+    // CORS headers
     const allowedOrigins = [
         'https://360.articulate.com',
         'https://review360.articulate.com',
@@ -24,26 +24,30 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { video_id } = req.body;
+        // Get video_id from query parameters
+        const video_id = req.query.video_id;
 
         if (!video_id) {
-            return res.status(400).json({ error: 'video_id is required' });
+            return res.status(400).json({ error: 'video_id is required as a query parameter' });
         }
 
-        // Updated to match HeyGen's V2 API format
-        const statusResponse = await fetch('https://api.heygen.com/v2/videos/status', {
-            method: 'POST',
+        // Make request to HeyGen API with exact v2 specifications
+        const statusResponse = await fetch(`https://api.heygen.com/v2/video_status.get?video_id=${video_id}`, {
+            method: 'GET',
             headers: {
-                'X-Api-Key': process.env.HEYGEN_API_KEY,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                video_id: video_id
-            })
+                'accept': 'application/json',
+                'x-api-key': process.env.HEYGEN_API_KEY
+            }
         });
 
+        if (!statusResponse.ok) {
+            const errorText = await statusResponse.text();
+            console.error('HeyGen API Error:', errorText);
+            throw new Error(`HeyGen API responded with status ${statusResponse.status}`);
+        }
+
         const statusData = await statusResponse.json();
-        console.log('Status Response:', statusData);
+        console.log('Video Status Response:', statusData);
         res.status(200).json(statusData);
 
     } catch (error) {
