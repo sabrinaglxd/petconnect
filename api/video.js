@@ -1,13 +1,13 @@
 export default async function handler(req, res) {
-    // CORS headers remain the same
+    // Update CORS headers to handle Articulate domains
     const allowedOrigins = [
-        'https://articulateusercontent.com',
+        'https://360.articulate.com',
         'https://review360.articulate.com',
-        '*'
+        'https://articulateusercontent.com'
     ];
     
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin) || origin?.endsWith('.articulate.com')) {
         res.setHeader('Access-Control-Allow-Origin', origin);
     }
     
@@ -18,82 +18,77 @@ export default async function handler(req, res) {
         'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     );
 
+    // Handle preflight request
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
     }
 
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     try {
-        // Log the incoming request
-        console.log('Received request body:', req.body);
-        
         const { script } = req.body;
-        
-        // Verify script content
-        if (!script) {
-            throw new Error('No script provided in request');
-        }
-        
-        console.log('Preparing HeyGen request with script:', script);
+        console.log('Attempting video generation with script:', script);
 
-        try {
-            const videoResponse = await fetch('https://api.heygen.com/v2/video/generate', {
-                method: 'POST',
-                headers: {
-                    'X-Api-Key': process.env.HEYGEN_API_KEY,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    version: "v2",
-                    video_inputs: [
-                        {
-                            character: {
-                                type: "avatar",
-                                avatar_id: "Georgia_expressive_2024112701",
-                                avatar_style: "normal"
-                            },
-                            voice: {
-                                type: "text",
-                                input_text: script,
-                                voice_id: "511ffd086a904ef593b608032004112c",
-                                speed: 1.1
-                            }
-                        }
-                    ],
-                    dimension: {
-                        width: 1280,
-                        height: 720
+        // Log what we're sending to HeyGen
+        const requestBody = {
+            version: "v2",
+            video_inputs: [
+                {
+                    character: {
+                        type: "avatar",
+                        avatar_id: "Georgia_expressive_2024112701",
+                        avatar_style: "normal"
+                    },
+                    voice: {
+                        type: "text",
+                        input_text: script,
+                        voice_id: "511ffd086a904ef593b608032004112c",
+                        speed: 1.1
                     }
-                })
-            });
-        
-            // Add these lines to see the raw response
-            const rawResponse = await videoResponse.text();
-            console.log('HeyGen Response Status:', videoResponse.status);
-            console.log('HeyGen Raw Response:', rawResponse);
-        
-            try {
-                const data = JSON.parse(rawResponse);
-                console.log('Parsed Response:', data);
-                res.status(200).json(data);
-            } catch (parseError) {
-                console.error('Failed to parse response:', rawResponse);
-                throw new Error(`Invalid response from HeyGen: ${rawResponse}`);
+                }
+            ],
+            dimension: {
+                width: 1280,
+                height: 720
             }
-        
+        };
+        console.log('HeyGen request body:', JSON.stringify(requestBody, null, 2));
 
-        } catch (fetchError) {
-            console.error('Fetch error:', fetchError);
-            throw new Error(`HeyGen API request failed: ${fetchError.message}`);
+        // Using production endpoint
+        const generateResponse = await fetch('https://api.heygen.com/v2/video/generate', {
+            method: 'POST',
+            headers: {
+                'X-Api-Key': process.env.HEYGEN_API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        // Log the full response
+        const responseText = await generateResponse.text();
+        console.log('HeyGen Response Status:', generateResponse.status);
+        console.log('HeyGen Raw Response:', responseText);
+
+        // Try to parse the response
+        let data;
+        try {
+            data = JSON.parse(responseText);
+            console.log('Parsed Response:', data);
+            res.status(200).json(data);
+        } catch (parseError) {
+            console.error('Failed to parse HeyGen response:', responseText);
+            throw new Error(`Invalid response from HeyGen: ${responseText}`);
         }
 
     } catch (error) {
-        console.error('Full error details:', {
+        console.error('Detailed generation error:', {
             message: error.message,
             stack: error.stack,
-            name: error.name
+            cause: error.cause
         });
-        
         res.status(500).json({ 
             error: 'Failed to process request',
             details: error.message,
