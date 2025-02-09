@@ -34,8 +34,8 @@ export default async function handler(req, res) {
         // Log the request details
         console.log('Checking status for video_id:', video_id);
 
-        // Make request to HeyGen API with v2 endpoint
-        const apiUrl = `https://api.heygen.com/v2/video_status.get?video_id=${encodeURIComponent(video_id)}`;
+        // Updated endpoint URL to match HeyGen's documentation
+        const apiUrl = `https://api.heygen.com/v2/videos/${encodeURIComponent(video_id)}`;
         console.log('Making request to:', apiUrl);
 
         const statusResponse = await fetch(apiUrl, {
