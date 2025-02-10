@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         }
 
         // Using v1 endpoint as fallback
-        const apiUrl = `https://api.heygen.com/v1/videos/${encodeURIComponent(video_id)}`;
+        const apiUrl = `https://api.heygen.com/v2/videos/${encodeURIComponent(video_id)}`;
         console.log('Making request to:', apiUrl);
 
         const statusResponse = await fetch(apiUrl, {
