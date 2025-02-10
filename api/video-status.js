@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
     // CORS headers remain the same
-    const allowedOrigins = [
+    /*const allowedOrigins = [
         'https://360.articulate.com',
         'https://review360.articulate.com',
         'https://articulateusercontent.com'
@@ -9,8 +9,8 @@ export default async function handler(req, res) {
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin) || origin?.endsWith('.articulate.com')) {
         res.setHeader('Access-Control-Allow-Origin', origin);
-    }
-    
+    } */
+    res.setHeader('Access-Control-Allow-Origin', "*");
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     res.setHeader(
