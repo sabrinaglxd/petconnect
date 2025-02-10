@@ -1,0 +1,11 @@
+{
+    "version": 2,
+    "routes": [
+      { "src": "/api/video-status", "dest": "/api/video-status.js" }
+    ],
+    "functions": {
+      "api/video-status.js": {
+        "maxDuration": 30
+      }
+    }
+  }
