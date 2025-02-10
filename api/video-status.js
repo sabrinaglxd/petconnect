@@ -18,10 +18,16 @@ export default async function handler(req, res) {
         'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     );
 
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
+    // First handle OPTIONS requests (keep this part)
+if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+}
+
+// Then check if it's not GET (new check)
+if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed. Please use GET.' });
+}
 
     try {
         const video_id = req.query.video_id;
@@ -31,16 +37,13 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'video_id is required as a query parameter' });
         }
 
-        // Using v1 endpoint as fallback
-        const apiUrl = `https://api.heygen.com/v2/videos/${encodeURIComponent(video_id)}`;
-        console.log('Making request to:', apiUrl);
+        const apiUrl = `https://api.heygen.com/v2/video/status.get?video_id=${encodeURIComponent(video_id)}`;
 
         const statusResponse = await fetch(apiUrl, {
             method: 'GET',
             headers: {
-                'accept': 'application/json',
-                'content-type': 'application/json',
-                'x-api-key': process.env.HEYGEN_API_KEY
+                'X-Api-Key': process.env.HEYGEN_API_KEY,  // Changed to match video.js style
+                'Content-Type': 'application/json'
             }
         });
 
