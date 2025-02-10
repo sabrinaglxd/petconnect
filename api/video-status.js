@@ -38,14 +38,14 @@ export default async function handler(req, res) {
         }
 
         // Updated to match HeyGen's v2 API format
-        const apiUrl = `https://api.heygen.com/v2/video_status.get?video_id=${encodeURIComponent(video_id)}`;
+        const apiUrl = `https://api.heygen.com/v1/video_status.get?video_id=${encodeURIComponent(video_id)}`;
         console.log('Making request to:', apiUrl);
 
         const statusResponse = await fetch(apiUrl, {
             method: 'GET',
             headers: {
                 'X-Api-Key': process.env.HEYGEN_API_KEY,
-                'Content-Type': 'application/json'
+                'accept': 'application/json'
             }
         });
 
