@@ -1,82 +1,92 @@
 export const config = {
     runtime: 'edge'
-  };
-export default async function handler(req, res) {
-    // CORS headers remain the same
-    /*const allowedOrigins = [
+};
+
+export default async function handler(req) {
+    const allowedOrigins = [
         'https://360.articulate.com',
         'https://review360.articulate.com',
         'https://articulateusercontent.com'
     ];
     
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin) || origin?.endsWith('.articulate.com')) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-    } */
-    res.setHeader('Access-Control-Allow-Origin', "*");
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': req.headers.get('origin')?.endsWith('.articulate.com') ? 
+            req.headers.get('origin') : allowedOrigins[0],
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+        'Access-Control-Max-Age': '86400',
+        'Content-Type': 'application/json'
+    };
 
-    // Handle preflight request
+    // Handle OPTIONS request
     if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+        return new Response(null, {
+            status: 204,
+            headers: corsHeaders
+        });
     }
 
     // Ensure GET method
     if (req.method !== 'GET') {
-        return res.status(405).json({ error: 'Method not allowed. Please use GET.' });
+        return new Response(JSON.stringify({ error: 'Method not allowed. Please use GET.' }), {
+            status: 405,
+            headers: corsHeaders
+        });
     }
 
     try {
-        const video_id = req.query.video_id;
+        const url = new URL(req.url);
+        const video_id = url.searchParams.get('video_id');
         console.log('Checking status for video_id:', video_id);
 
         if (!video_id) {
-            return res.status(400).json({ error: 'video_id is required as a query parameter' });
+            return new Response(JSON.stringify({ error: 'video_id is required as a query parameter' }), {
+                status: 400,
+                headers: corsHeaders
+            });
         }
 
-        // Updated to match HeyGen's v2 API format
-        const apiUrl = `https://api.heygen.com/v1/video_status.get?video_id=${encodeURIComponent(video_id)}`;
+        const apiUrl = `https://api.heygen.com/v2/video_status.get?video_id=${encodeURIComponent(video_id)}`;
         console.log('Making request to:', apiUrl);
 
         const statusResponse = await fetch(apiUrl, {
             method: 'GET',
             headers: {
-                'X-Api-Key': process.env.HEYGEN_API_KEY,
-                'accept': 'application/json'
+                'accept': 'application/json',
+                'x-api-key': process.env.HEYGEN_API_KEY
             }
         });
 
         console.log('Response status:', statusResponse.status);
         
-        const contentType = statusResponse.headers.get('content-type');
-        console.log('Response content type:', contentType);
-
         const responseText = await statusResponse.text();
         console.log('Raw response:', responseText);
 
-        // Try to parse as JSON
         try {
             const data = JSON.parse(responseText);
-            return res.status(statusResponse.status).json(data);
+            return new Response(JSON.stringify(data), {
+                status: statusResponse.status,
+                headers: corsHeaders
+            });
         } catch (parseError) {
             console.error('Parse error:', parseError);
-            return res.status(500).json({
+            return new Response(JSON.stringify({
                 error: 'Failed to parse HeyGen response',
                 details: responseText.substring(0, 100)
+            }), {
+                status: 500,
+                headers: corsHeaders
             });
         }
 
     } catch (error) {
         console.error('Error in handler:', error);
-        return res.status(500).json({
+        return new Response(JSON.stringify({
             error: 'Failed to check video status',
             details: error.message
+        }), {
+            status: 500,
+            headers: corsHeaders
         });
     }
 }
