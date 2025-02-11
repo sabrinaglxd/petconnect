@@ -6,12 +6,13 @@ export default async function handler(req) {
     const allowedOrigins = [
         'https://360.articulate.com',
         'https://review360.articulate.com',
-        'https://articulateusercontent.com'
+        'https://articulateusercontent.com',  // Added this origin
+        'https://preview.articulate.com'
     ];
     
+    const origin = req.headers.get('origin');
     const corsHeaders = {
-        'Access-Control-Allow-Origin': req.headers.get('origin')?.endsWith('.articulate.com') ? 
-            req.headers.get('origin') : allowedOrigins[0],
+        'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': '*',
         'Access-Control-Max-Age': '86400',
@@ -47,25 +48,34 @@ export default async function handler(req) {
         }
 
         const apiUrl = `https://api.heygen.com/v1/video_status.get?video_id=${encodeURIComponent(video_id)}`;
-        console.log('Making request to:', apiUrl);
-
         const statusResponse = await fetch(apiUrl, {
             method: 'GET',
             headers: {
                 'accept': 'application/json',
-                'x-api-key': process.env.HEYGEN_API_KEY  // Changed to lowercase
+                'x-api-key': process.env.HEYGEN_API_KEY
             }
         });
 
-        console.log('Response status:', statusResponse.status);
-        
         const responseText = await statusResponse.text();
         console.log('Raw response:', responseText);
 
         try {
             const data = JSON.parse(responseText);
+            
+            // Check if video is still processing
+            if (data.status === 'processing') {
+                return new Response(JSON.stringify({
+                    status: 'processing',
+                    message: 'Video is still being processed'
+                }), {
+                    status: 202,  // 202 Accepted indicates the request was valid but processing is not complete
+                    headers: corsHeaders
+                });
+            }
+
+            // If video is completed, return the full response
             return new Response(JSON.stringify(data), {
-                status: statusResponse.status,
+                status: 200,
                 headers: corsHeaders
             });
         } catch (parseError) {
