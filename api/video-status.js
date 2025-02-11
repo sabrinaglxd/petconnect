@@ -53,7 +53,7 @@ export default async function handler(req) {
             method: 'GET',
             headers: {
                 'accept': 'application/json',
-                'x-api-key': process.env.HEYGEN_API_KEY
+                'x-api-key': process.env.HEYGEN_API_KEY  // Changed to lowercase
             }
         });
 
