@@ -47,6 +47,10 @@ export default async function handler(req, res) {
                         input_text: script,
                         voice_id: "511ffd086a904ef593b608032004112c",
                         speed: 1.1
+                    },
+                    background: {
+                        type: "image",
+                        url: "https://sabrinaglxd.s3.us-west-1.amazonaws.com/Morgan+Background.png"
                     }
                 }
             ],
